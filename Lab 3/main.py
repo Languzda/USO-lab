@@ -1,13 +1,26 @@
 import numpy as np
 import sympy as sym
 import scipy as scipy
+from numpy.linalg import matrix_rank
+import matplotlib.pyplot as plt
+from scipy import signal
+from scipy.signal import bessel, lsim
 
 
-def zadanie1_2():
-    A1 = np.matrix([[-1/2, 0], [0, -1/2]])
-    B1 = np.matrix([[1/2], [1/2]])
-    #K1 = np.matrix([[B1], [A1*B1]])
-    #print(K1)
+def kalman(A, B):
+    # budowanie macierzy kalmana
+    kalmanMatrix = B
+    rankA = matrix_rank(A)
+
+    for x in range(rankA-1):
+        col = A ** (x+1) @ B
+        kalmanMatrix = np.append(kalmanMatrix, col, axis = 1)
+
+    # Sprawdzenie czy rząd macierzy A jest równy rzadowi macierzy kalmana, gdy jest macierz jest sterowalna
+    if rankA == matrix_rank(kalmanMatrix):
+        print('Układ sterowalny')
+    else:
+        print('Układ niesterowalny')
 
 
 def zadanie3_1(A):
@@ -22,12 +35,16 @@ def zadanie3_1(A):
 
 
 def zadanie3_2(A, B):
+    # Deklaracja zmiennych symbolicznych
     k1 = sym.Symbol('k1')
     k2 = sym.Symbol('k2')
     k3 = sym.Symbol('k3')
     x = sym.Symbol('x')
+
+    #stworzenie macierzy lmbda oraz K
     Lam = np.matrix([[x, 0, 0], [0, x, 0], [0, 0, x]])
     K = np.matrix([k1, k2, k3])
+
     X = A-(B@K)
     Z = (Lam-X)
     M = sym.Matrix(Z)
@@ -35,10 +52,13 @@ def zadanie3_2(A, B):
     print(Wyz)
 
 
+# Rozwiązanie układu nieliniowego na podstawie wyliczonego wyznacznika z poprzedniego zadania
 def zadanie3_2_1(w):
     k1 = w[0]
     k2 = w[1]
     k3 = w[2]
+
+    # Rozwiązania
     R = [0, 0, 0]
     R[0] = k1+0.5*k2+0.333333333333333*k3 + 1.83333333333333-8
     R[1] = 0.833333333333333*k1 + 0.666666666666667*k2 + 0.5*k3-17
@@ -47,6 +67,14 @@ def zadanie3_2_1(w):
 
 
 if __name__ == '__main__':
+    # Parametry
+    A = np.matrix([[-1, 2, -1], [1, -1, -3], [1, 4, 0]])
+    B = np.matrix([[2], [3], [2]])
+    C = np.matrix([[1, 1, 0]])
+    D = 0
+    # sprawdzanie czy układ jest sterowalny
+    kalman(A, B)
+
     # Zadanie 3.2.1
     print(scipy.optimize.fsolve(zadanie3_2_1, np.array([0, 0, 0])))
-    zadanie1_2()
+
