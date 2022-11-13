@@ -23,6 +23,29 @@ def kalman(A, B):
         print('Układ niesterowalny')
 
 
+def zadanie1_3(A, B, C, D):
+    sys = signal.StateSpace(A, B, C, D)
+    t1, y1 = signal.step(sys)
+
+    # odpowiedź skokowa
+    plt.figure(0)
+    plt.plot(t1, y1)
+    plt.xlabel('Czas')
+    plt.ylabel('y(t)')
+    plt.title('1.3 Odpowiedź skokowa')
+    plt.grid()
+    plt.show()
+
+    # odpowiedź na wymuszenie sinusoidalne
+    u_down = np.arange(1, -50, -1)
+    t = np.arange(0, 51, 1)
+    plt.figure(1)
+    tout, y2, x2 = lsim(sys, u_down, t)
+    plt.plot(t, y2)
+    plt.grid()
+    plt.show()
+
+
 def zadanie3_1(A):
     if np.linalg.matrix_rank(A) == 3:
         x = sym.Symbol('x')
@@ -52,6 +75,25 @@ def zadanie3_2(A, B):
     print(Wyz)
 
 
+def zadanie2(A, K):
+    #macierz obliczona ręcznie współczynniki i macierz sterowalnosci
+    poly = np.poly(A)
+    S = K[0]
+
+    #nowa macierz
+    alpha = np.matrix([[0, 1, 0],[0, 0, 1],[-poly[3], -poly[2], -poly[1]]])
+    beta = np.matrix([[0],[0],[1]])
+    K2 = kalman(alpha, beta)
+    Sal = K2[0]
+
+    #macierz podobieństwa
+    P = Sal @ S**(-1)
+    gamma = C*P**(-1)
+    delta = D
+    newMatrix = signal.StateSpace(alpha,beta,gamma,delta)
+    return(poly, S, alpha, beta, K2, Sal, P, gamma, delta, newMatrix)
+
+
 # Rozwiązanie układu nieliniowego na podstawie wyliczonego wyznacznika z poprzedniego zadania
 def zadanie3_2_1(w):
     k1 = w[0]
@@ -74,7 +116,7 @@ if __name__ == '__main__':
     D = 0
     # sprawdzanie czy układ jest sterowalny
     kalman(A, B)
-
+    zadanie1_3(A, B, C, D)
     # Zadanie 3.2.1
     print(scipy.optimize.fsolve(zadanie3_2_1, np.array([0, 0, 0])))
 
